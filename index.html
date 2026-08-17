@@ -1,1 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document privé</title>
 
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f4f5f7;
+      font-family: Arial, sans-serif;
+      color: #222;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 430px;
+      background: white;
+      padding: 35px 25px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    .icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 25px;
+    }
+
+    p {
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+      text-align: center;
+      outline: none;
+      margin-bottom: 15px;
+    }
+
+    input:focus {
+      border-color: #222;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #111;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #333;
+    }
+
+    #message {
+      margin-top: 15px;
+      font-size: 14px;
+      min-height: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="icon">📄</div>
+
+    <h1>DOCUMENT PRIVÉ</h1>
+
+    <p>Entrez votre code d'accès pour ouvrir le document.</p>
+
+    <input
+      type="text"
+      id="accessCode"
+      placeholder="ABC-123456"
+      autocomplete="off"
+    >
+
+    <button onclick="openDocument()">
+      OUVRIR LE DOCUMENT
+    </button>
+
+    <div id="message"></div>
+
+  </div>
+
+  <script>
+    function openDocument() {
+
+      const code = document.getElementById("accessCode").value.trim();
+      const message = document.getElementById("message");
+
+      if (code === "") {
+        message.textContent = "Veuillez entrer votre code d'accès.";
+        message.style.color = "red";
+        return;
+      }
+
+      message.textContent = "Vérification du code...";
+      message.style.color = "#555";
+
+      /*
+       * La vérification réelle du code sera ajoutée
+       * dans une prochaine étape avec notre système
+       * de sécurité et de gestion des sessions.
+       */
+
+      setTimeout(function () {
+        message.textContent =
+          "Le système de vérification sera connecté à cette page.";
+        message.style.color = "#555";
+      }, 800);
+    }
+  </script>
+
+</body>
+</html>
