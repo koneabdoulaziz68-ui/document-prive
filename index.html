@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Document privé</title>
 
   <style>
@@ -27,7 +28,7 @@
       background: white;
       padding: 35px 25px;
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       text-align: center;
     }
 
@@ -73,14 +74,23 @@
       cursor: pointer;
     }
 
-    button:hover {
-      background: #333;
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
     }
 
     #message {
       margin-top: 15px;
       font-size: 14px;
       min-height: 20px;
+    }
+
+    .success {
+      color: #16803c;
+    }
+
+    .error {
+      color: #d62828;
     }
   </style>
 </head>
@@ -93,16 +103,20 @@
 
     <h1>DOCUMENT PRIVÉ</h1>
 
-    <p>Entrez votre code d'accès pour ouvrir le document.</p>
+    <p>
+      Entrez votre code d'accès pour ouvrir le document.
+    </p>
 
     <input
       type="text"
       id="accessCode"
       placeholder="ABC-123456"
       autocomplete="off"
+      autocapitalize="characters"
+      spellcheck="false"
     >
 
-    <button onclick="openDocument()">
+    <button id="openButton" onclick="openDocument()">
       OUVRIR LE DOCUMENT
     </button>
 
@@ -111,32 +125,94 @@
   </div>
 
   <script>
-    function openDocument() {
 
-      const code = document.getElementById("accessCode").value.trim();
+    const VERIFY_URL =
+      "https://lzefnxasbiutjahnsyse.supabase.co/functions/v1/verify-access";
+
+    async function openDocument() {
+
+      const input = document.getElementById("accessCode");
+      const button = document.getElementById("openButton");
       const message = document.getElementById("message");
 
-      if (code === "") {
-        message.textContent = "Veuillez entrer votre code d'accès.";
-        message.style.color = "red";
+      const code = input.value.trim();
+
+      if (!code) {
+        message.textContent =
+          "Veuillez entrer votre code d'accès.";
+        message.className = "error";
         return;
       }
 
-      message.textContent = "Vérification du code...";
-      message.style.color = "#555";
+      button.disabled = true;
+      button.textContent = "VÉRIFICATION...";
+      message.textContent = "";
 
-      /*
-       * La vérification réelle du code sera ajoutée
-       * dans une prochaine étape avec notre système
-       * de sécurité et de gestion des sessions.
-       */
+      try {
 
-      setTimeout(function () {
+        const response = await fetch(VERIFY_URL, {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            code: code
+          })
+
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+
+          /*
+           * Pour le moment, nous affichons seulement
+           * la confirmation.
+           *
+           * Le lecteur PDF sécurisé sera ajouté
+           * dans l'étape suivante.
+           */
+
+          message.textContent =
+            "Accès autorisé. Session créée.";
+
+          message.className = "success";
+
+          console.log(
+            "Session ID :",
+            result.session_id
+          );
+
+          button.textContent = "ACCÈS AUTORISÉ";
+
+        } else {
+
+          message.textContent =
+            result.message || "Accès refusé.";
+
+          message.className = "error";
+
+          button.disabled = false;
+          button.textContent = "OUVRIR LE DOCUMENT";
+        }
+
+      } catch (error) {
+
+        console.error(error);
+
         message.textContent =
-          "Le système de vérification sera connecté à cette page.";
-        message.style.color = "#555";
-      }, 800);
+          "Impossible de contacter le serveur.";
+
+        message.className = "error";
+
+        button.disabled = false;
+        button.textContent = "RÉESSAYER";
+      }
     }
+
   </script>
 
 </body>
