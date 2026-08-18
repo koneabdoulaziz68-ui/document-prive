@@ -13,17 +13,16 @@
 
     body {
       margin: 0;
-      min-height: 100vh;
-      background: #f4f5f7;
+      background: #f1f1f1;
       font-family: Arial, sans-serif;
       color: #222;
     }
 
     /* =========================
-       PAGE DE CONNEXION
+       CONNEXION
        ========================= */
 
-    .login-container {
+    #loginContainer {
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -37,7 +36,7 @@
       background: white;
       padding: 35px 25px;
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
       text-align: center;
     }
 
@@ -67,10 +66,6 @@
       margin-bottom: 15px;
     }
 
-    input:focus {
-      border-color: #222;
-    }
-
     button {
       width: 100%;
       padding: 15px;
@@ -84,8 +79,7 @@
     }
 
     button:disabled {
-      opacity: 0.6;
-      cursor: wait;
+      opacity: .6;
     }
 
     #message {
@@ -107,10 +101,9 @@
        DOCUMENT
        ========================= */
 
-    .document-container {
+    #documentContainer {
       display: none;
       min-height: 100vh;
-      background: #222;
     }
 
     .document-header {
@@ -126,7 +119,7 @@
 
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 100;
     }
 
     .document-title {
@@ -137,96 +130,92 @@
     .exit-button {
       width: auto;
       padding: 9px 15px;
-      background: #c62828;
+      background: #d62828;
       font-size: 13px;
     }
 
-    .pdf-area {
+    #pdfViewer {
       width: 100%;
-      min-height: calc(100vh - 60px);
-
+      padding: 15px 5px 40px;
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
-
-      padding: 10px;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
     }
 
-    #pdfFrame {
-      width: 100%;
-      height: calc(100vh - 80px);
-
-      border: none;
+    .page-container {
       background: white;
-      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.15);
+      max-width: 100%;
     }
 
-    .loading {
-      color: white;
-      padding: 40px;
+    .page-container canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .page-number {
       text-align: center;
+      background: #111;
+      color: white;
+      font-size: 11px;
+      padding: 5px;
+    }
+
+    #loadingDocument {
+      color: #444;
+      text-align: center;
+      padding: 30px;
     }
 
     @media (max-width: 600px) {
 
-      .pdf-area {
-        padding: 3px;
-      }
-
-      #pdfFrame {
-        height: calc(100vh - 65px);
+      #pdfViewer {
+        padding: 5px 2px 30px;
+        gap: 8px;
       }
 
       .document-title {
         font-size: 12px;
       }
 
-    }
-
-    /* =========================
-       IMPRESSION
-       ========================= */
-
-    @media print {
-
-      body {
-        display: none !important;
+      .page-container {
+        width: 100%;
       }
 
     }
 
+    /* Impression */
+    @media print {
+      body {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 
 <body>
 
+  <!-- =========================
+       PAGE DE CONNEXION
+       ========================= -->
 
-  <!-- ==================================================
-       CONNEXION
-       ================================================== -->
-
-  <div
-    class="login-container"
-    id="loginContainer"
-  >
+  <div id="loginContainer">
 
     <div class="login-box">
 
-      <div class="icon">
-        📄
-      </div>
+      <div class="icon">📄</div>
 
-      <h1>
-        DOCUMENT PRIVÉ
-      </h1>
+      <h1>DOCUMENT PRIVÉ</h1>
 
       <p class="description">
         Entrez votre code d'accès pour ouvrir le document.
       </p>
 
       <input
-        type="text"
         id="accessCode"
+        type="text"
         placeholder="ABC-123456"
         autocomplete="off"
         autocapitalize="characters"
@@ -240,23 +229,18 @@
         OUVRIR LE DOCUMENT
       </button>
 
-      <div
-        id="message"
-      ></div>
+      <div id="message"></div>
 
     </div>
 
   </div>
 
 
-  <!-- ==================================================
-       LECTEUR DU DOCUMENT
-       ================================================== -->
+  <!-- =========================
+       DOCUMENT
+       ========================= -->
 
-  <div
-    class="document-container"
-    id="documentContainer"
-  >
+  <div id="documentContainer">
 
     <div class="document-header">
 
@@ -273,35 +257,35 @@
 
     </div>
 
-
-    <div
-      class="pdf-area"
-      id="pdfArea"
-    >
-
-      <div
-        class="loading"
-        id="pdfLoading"
-      >
-        Chargement du document...
-      </div>
-
-      <iframe
-        id="pdfFrame"
-        title="Document privé"
-        style="display: none;"
-      ></iframe>
-
+    <div id="loadingDocument">
+      Chargement du document...
     </div>
+
+    <div id="pdfViewer"></div>
 
   </div>
 
 
-  <script>
+  <!-- =========================
+       PDF.JS
+       ========================= -->
 
-    /* ==================================================
-       URLS DES FONCTIONS SUPABASE
-       ================================================== */
+  <script type="module">
+
+    import {
+      getDocument,
+      GlobalWorkerOptions
+    } from
+      "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.1.200/build/pdf.mjs";
+
+
+    GlobalWorkerOptions.workerSrc =
+      "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.1.200/build/pdf.worker.mjs";
+
+
+    /* =========================
+       URLS SUPABASE
+       ========================= */
 
     const VERIFY_URL =
       "https://lzefnxasbiutjahnsyse.supabase.co/functions/v1/verify-access";
@@ -313,49 +297,38 @@
       "https://lzefnxasbiutjahnsyse.supabase.co/functions/v1/get-document";
 
 
-    /* ==================================================
-       SESSION ACTUELLE
-       ================================================== */
-
     let currentSessionId = null;
 
-    let pdfObjectUrl = null;
 
-
-    /* ==================================================
+    /* =========================
        MESSAGE
-       ================================================== */
+       ========================= */
 
-    function showMessage(
-      text,
-      type
-    ) {
+    function showMessage(text, type = "") {
 
       const message =
         document.getElementById("message");
 
       message.textContent = text;
-
-      message.className =
-        type || "";
+      message.className = type;
 
     }
 
 
-    /* ==================================================
-       OUVRIR LE DOCUMENT
-       ================================================== */
+    /* =========================
+       OUVERTURE
+       ========================= */
 
-    async function openDocument() {
+    window.openDocument = async function() {
 
-      const input =
-        document.getElementById("accessCode");
+      const code =
+        document
+          .getElementById("accessCode")
+          .value
+          .trim();
 
       const button =
         document.getElementById("openButton");
-
-      const code =
-        input.value.trim();
 
 
       if (!code) {
@@ -371,23 +344,18 @@
 
 
       button.disabled = true;
+      button.textContent = "VÉRIFICATION...";
 
-      button.textContent =
-        "VÉRIFICATION...";
-
-      showMessage(
-        "",
-        ""
-      );
+      showMessage("");
 
 
       try {
 
-        /* ============================================
-           1. VÉRIFICATION DU CODE
-           ============================================ */
+        /* =========================
+           VÉRIFICATION DU CODE
+           ========================= */
 
-        const verifyResponse =
+        const response =
           await fetch(
             VERIFY_URL,
             {
@@ -406,57 +374,23 @@
           );
 
 
-        let verifyResult;
+        const result =
+          await response.json();
 
 
-        try {
-
-          verifyResult =
-            await verifyResponse.json();
-
-        } catch (error) {
+        if (!response.ok ||
+            !result.success) {
 
           throw new Error(
-            "Réponse invalide du serveur de vérification."
+            result.message ||
+            "Accès refusé."
           );
 
         }
 
-
-        if (!verifyResponse.ok ||
-            !verifyResult.success) {
-
-          showMessage(
-            verifyResult.message ||
-            "Accès refusé.",
-            "error"
-          );
-
-          button.disabled = false;
-
-          button.textContent =
-            "OUVRIR LE DOCUMENT";
-
-          return;
-
-        }
-
-
-        /* ============================================
-           2. RÉCUPÉRATION DE LA SESSION
-           ============================================ */
 
         currentSessionId =
-          verifyResult.session_id;
-
-
-        if (!currentSessionId) {
-
-          throw new Error(
-            "Le serveur n'a pas fourni de session."
-          );
-
-        }
+          result.session_id;
 
 
         showMessage(
@@ -465,26 +399,17 @@
         );
 
 
-        /* ============================================
-           3. RÉCUPÉRATION DU PDF
-           ============================================ */
+        /* =========================
+           RÉCUPÉRATION DU PDF
+           ========================= */
 
-        await loadDocument();
+        await loadPdf();
 
 
       } catch (error) {
 
-        console.error(
-          "Erreur complète :",
-          error
-        );
+        console.error(error);
 
-
-        /*
-         * Si une session a été créée mais que
-         * le document n'a pas pu être chargé,
-         * on essaie de libérer la session.
-         */
 
         if (currentSessionId) {
 
@@ -492,8 +417,7 @@
             currentSessionId
           );
 
-          currentSessionId =
-            null;
+          currentSessionId = null;
 
         }
 
@@ -506,68 +430,43 @@
 
 
         button.disabled = false;
-
         button.textContent =
           "RÉESSAYER";
 
       }
 
-    }
+    };
 
 
-    /* ==================================================
-       CHARGER LE PDF
-       ================================================== */
+    /* =========================
+       RÉCUPÉRER LE PDF
+       ========================= */
 
-    async function loadDocument() {
+    async function loadPdf() {
 
-      const frame =
-        document.getElementById("pdfFrame");
+      const response =
+        await fetch(
+          DOCUMENT_URL,
+          {
+            method: "POST",
 
-      const loading =
-        document.getElementById("pdfLoading");
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
 
-
-      let response;
-
-
-      try {
-
-        response =
-          await fetch(
-            DOCUMENT_URL,
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-
-              body:
-                JSON.stringify({
-                  session_id:
-                    currentSessionId
-                })
-            }
-          );
-
-      } catch (error) {
-
-        throw new Error(
-          "Impossible de contacter le serveur du document."
+            body:
+              JSON.stringify({
+                session_id:
+                  currentSessionId
+              })
+          }
         );
 
-      }
-
-
-      /* ============================================
-         SI LE SERVEUR RENVOIE UNE ERREUR
-         ============================================ */
 
       if (!response.ok) {
 
-        let errorMessage =
+        let message =
           "Impossible de récupérer le document.";
 
 
@@ -576,30 +475,18 @@
           const errorData =
             await response.json();
 
-
           if (errorData.message) {
-
-            errorMessage =
+            message =
               errorData.message;
-
           }
 
-        } catch (error) {
-
-          // Réponse non JSON.
-        }
+        } catch (_) {}
 
 
-        throw new Error(
-          errorMessage
-        );
+        throw new Error(message);
 
       }
 
-
-      /* ============================================
-         VÉRIFICATION DU TYPE
-         ============================================ */
 
       const contentType =
         response.headers.get(
@@ -621,50 +508,29 @@
       }
 
 
-      /* ============================================
-         RÉCUPÉRATION DU FICHIER
-         ============================================ */
-
       const pdfBlob =
         await response.blob();
 
 
-      if (
-        !pdfBlob ||
-        pdfBlob.size === 0
-      ) {
-
-        throw new Error(
-          "Le document reçu est vide."
-        );
-
-      }
+      const pdfArrayBuffer =
+        await pdfBlob.arrayBuffer();
 
 
-      /* ============================================
-         URL TEMPORAIRE
-         ============================================ */
+      /* =========================
+         OUVRIR AVEC PDF.JS
+         ========================= */
 
-      pdfObjectUrl =
-        URL.createObjectURL(
-          pdfBlob
-        );
-
-
-      /* ============================================
-         AFFICHAGE
-         ============================================ */
-
-      frame.src =
-        pdfObjectUrl;
+      const loadingTask =
+        getDocument({
+          data:
+            new Uint8Array(
+              pdfArrayBuffer
+            )
+        });
 
 
-      loading.style.display =
-        "none";
-
-
-      frame.style.display =
-        "block";
+      const pdf =
+        await loadingTask.promise;
 
 
       document
@@ -678,49 +544,236 @@
       document
         .getElementById(
           "documentContainer"
-        ).style.display =
+        )
+        .style.display =
           "block";
+
+
+      document
+        .getElementById(
+          "loadingDocument"
+        )
+        .style.display =
+          "none";
+
+
+      const viewer =
+        document
+          .getElementById(
+            "pdfViewer"
+          );
+
+
+      viewer.innerHTML = "";
+
+
+      /* =========================
+         RENDRE LES PAGES
+         ========================= */
+
+      for (
+        let pageNumber = 1;
+        pageNumber <= pdf.numPages;
+        pageNumber++
+      ) {
+
+        await renderPage(
+          pdf,
+          pageNumber,
+          viewer
+        );
+
+      }
 
     }
 
 
-    /* ==================================================
-       LIBÉRER UNE SESSION
-       ================================================== */
+    /* =========================
+       RENDRE UNE PAGE
+       ========================= */
+
+    async function renderPage(
+      pdf,
+      pageNumber,
+      viewer
+    ) {
+
+      const page =
+        await pdf.getPage(
+          pageNumber
+        );
+
+
+      const baseViewport =
+        page.getViewport({
+          scale: 1
+        });
+
+
+      const availableWidth =
+        Math.min(
+          window.innerWidth - 10,
+          900
+        );
+
+
+      let scale =
+        availableWidth /
+        baseViewport.width;
+
+
+      /* Sur petit écran,
+         on garde une taille lisible. */
+
+      if (scale < 0.8) {
+        scale = 0.8;
+      }
+
+
+      const viewport =
+        page.getViewport({
+          scale: scale
+        });
+
+
+      const container =
+        document.createElement(
+          "div"
+        );
+
+      container.className =
+        "page-container";
+
+
+      const canvas =
+        document.createElement(
+          "canvas"
+        );
+
+
+      const context =
+        canvas.getContext(
+          "2d"
+        );
+
+
+      const outputScale =
+        window.devicePixelRatio || 1;
+
+
+      canvas.width =
+        Math.floor(
+          viewport.width *
+          outputScale
+        );
+
+
+      canvas.height =
+        Math.floor(
+          viewport.height *
+          outputScale
+        );
+
+
+      canvas.style.width =
+        Math.floor(
+          viewport.width
+        ) + "px";
+
+
+      canvas.style.height =
+        Math.floor(
+          viewport.height
+        ) + "px";
+
+
+      const pageNumberLabel =
+        document.createElement(
+          "div"
+        );
+
+
+      pageNumberLabel.className =
+        "page-number";
+
+
+      pageNumberLabel.textContent =
+        "Page " +
+        pageNumber +
+        " / " +
+        pdf.numPages;
+
+
+      container.appendChild(
+        canvas
+      );
+
+      container.appendChild(
+        pageNumberLabel
+      );
+
+      viewer.appendChild(
+        container
+      );
+
+
+      await page.render({
+
+        canvasContext:
+          context,
+
+        viewport:
+          viewport,
+
+        transform:
+          outputScale !== 1
+            ? [
+                outputScale,
+                0,
+                0,
+                outputScale,
+                0,
+                0
+              ]
+            : null
+
+      }).promise;
+
+    }
+
+
+    /* =========================
+       LIBÉRER SESSION
+       ========================= */
 
     async function releaseSession(
       sessionId
     ) {
 
       if (!sessionId) {
-        return false;
+        return;
       }
 
 
       try {
 
-        const response =
-          await fetch(
-            RELEASE_URL,
-            {
-              method: "POST",
+        await fetch(
+          RELEASE_URL,
+          {
+            method: "POST",
 
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
 
-              body:
-                JSON.stringify({
-                  session_id:
-                    sessionId
-                })
-            }
-          );
-
-
-        return response.ok;
-
+            body:
+              JSON.stringify({
+                session_id:
+                  sessionId
+              })
+          }
+        );
 
       } catch (error) {
 
@@ -729,118 +782,84 @@
           error
         );
 
-        return false;
-
       }
 
     }
 
 
-    /* ==================================================
-       QUITTER LE DOCUMENT
-       ================================================== */
+    /* =========================
+       QUITTER
+       ========================= */
 
-    async function exitDocument() {
+    window.exitDocument =
+      async function() {
 
-      const sessionToRelease =
-        currentSessionId;
-
-
-      currentSessionId =
-        null;
+        const session =
+          currentSessionId;
 
 
-      /* ============================================
-         LIBÉRATION
-         ============================================ */
-
-      await releaseSession(
-        sessionToRelease
-      );
-
-
-      /* ============================================
-         SUPPRESSION DE L'URL TEMPORAIRE
-         ============================================ */
-
-      if (pdfObjectUrl) {
-
-        URL.revokeObjectURL(
-          pdfObjectUrl
-        );
-
-        pdfObjectUrl =
+        currentSessionId =
           null;
 
-      }
 
-
-      const frame =
-        document.getElementById(
-          "pdfFrame"
+        await releaseSession(
+          session
         );
 
 
-      frame.src = "";
+        document
+          .getElementById(
+            "pdfViewer"
+          )
+          .innerHTML = "";
 
 
-      frame.style.display =
-        "none";
+        document
+          .getElementById(
+            "documentContainer"
+          )
+          .style.display =
+            "none";
 
 
-      document
-        .getElementById(
-          "pdfLoading"
-        ).style.display =
-          "block";
+        document
+          .getElementById(
+            "loginContainer"
+          )
+          .style.display =
+            "flex";
 
 
-      document
-        .getElementById(
-          "documentContainer"
-        ).style.display =
-          "none";
+        document
+          .getElementById(
+            "accessCode"
+          )
+          .value = "";
 
 
-      document
-        .getElementById(
-          "loginContainer"
-        ).style.display =
-          "flex";
+        const button =
+          document
+            .getElementById(
+              "openButton"
+            );
 
 
-      document
-        .getElementById(
-          "accessCode"
-        ).value =
-          "";
+        button.disabled =
+          false;
 
 
-      showMessage(
-        "",
-        ""
-      );
+        button.textContent =
+          "OUVRIR LE DOCUMENT";
 
 
-      const button =
-        document.getElementById(
-          "openButton"
-        );
+        showMessage("");
+
+      };
 
 
-      button.disabled =
-        false;
-
-
-      button.textContent =
-        "OUVRIR LE DOCUMENT";
-
-    }
-
-
-    /* ==================================================
-       FERMETURE DE LA PAGE
-       ================================================== */
+    /* =========================
+       FERMETURE PAGE
+       ========================= */
 
     window.addEventListener(
       "pagehide",
@@ -851,22 +870,17 @@
         }
 
 
-        const data =
+        const body =
           JSON.stringify({
             session_id:
               currentSessionId
           });
 
 
-        /*
-         * sendBeacon permet d'envoyer la
-         * libération pendant la fermeture.
-         */
-
         navigator.sendBeacon(
           RELEASE_URL,
           new Blob(
-            [data],
+            [body],
             {
               type:
                 "application/json"
@@ -882,47 +896,30 @@
     );
 
 
-    /* ==================================================
-       COPIER / COUPER
-       ================================================== */
+    /* =========================
+       PROTECTIONS INTERFACE
+       ========================= */
+
+    document.addEventListener(
+      "contextmenu",
+      event =>
+        event.preventDefault()
+    );
+
 
     document.addEventListener(
       "copy",
-      function(event) {
-
-        event.preventDefault();
-
-      }
+      event =>
+        event.preventDefault()
     );
 
 
     document.addEventListener(
       "cut",
-      function(event) {
-
-        event.preventDefault();
-
-      }
+      event =>
+        event.preventDefault()
     );
 
-
-    /* ==================================================
-       MENU CONTEXTUEL
-       ================================================== */
-
-    document.addEventListener(
-      "contextmenu",
-      function(event) {
-
-        event.preventDefault();
-
-      }
-    );
-
-
-    /* ==================================================
-       RACCOURCIS
-       ================================================== */
 
     document.addEventListener(
       "keydown",
@@ -932,35 +929,13 @@
           event.key.toLowerCase();
 
 
-        /* Ctrl + P */
-
         if (
           event.ctrlKey &&
-          key === "p"
-        ) {
-
-          event.preventDefault();
-
-        }
-
-
-        /* Ctrl + S */
-
-        if (
-          event.ctrlKey &&
-          key === "s"
-        ) {
-
-          event.preventDefault();
-
-        }
-
-
-        /* Ctrl + U */
-
-        if (
-          event.ctrlKey &&
-          key === "u"
+          (
+            key === "p" ||
+            key === "s" ||
+            key === "u"
+          )
         ) {
 
           event.preventDefault();
@@ -969,7 +944,6 @@
 
       }
     );
-
 
   </script>
 
