@@ -14,16 +14,21 @@
     body {
       margin: 0;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       background: #f4f5f7;
       font-family: Arial, sans-serif;
       color: #222;
     }
 
-    .container {
-      width: 90%;
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-box {
+      width: 100%;
       max-width: 430px;
       background: white;
       padding: 35px 25px;
@@ -42,7 +47,7 @@
       font-size: 25px;
     }
 
-    p {
+    .description {
       color: #666;
       margin-bottom: 25px;
     }
@@ -81,8 +86,8 @@
 
     #message {
       margin-top: 15px;
-      font-size: 14px;
       min-height: 20px;
+      font-size: 14px;
     }
 
     .success {
@@ -92,112 +97,265 @@
     .error {
       color: #d62828;
     }
+
+    .document-container {
+      display: none;
+      min-height: 100vh;
+      background: #222;
+    }
+
+    .document-header {
+      height: 60px;
+      background: #111;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 15px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .document-title {
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .exit-button {
+      width: auto;
+      padding: 9px 15px;
+      background: #c62828;
+      font-size: 13px;
+    }
+
+    .pdf-area {
+      width: 100%;
+      min-height: calc(100vh - 60px);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    #pdfFrame {
+      width: 100%;
+      height: calc(100vh - 100px);
+      border: none;
+      background: white;
+      border-radius: 4px;
+    }
+
+    .loading {
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .pdf-area {
+        padding: 5px;
+      }
+
+      #pdfFrame {
+        height: calc(100vh - 70px);
+      }
+
+      .document-title {
+        font-size: 12px;
+      }
+    }
+
+    @media print {
+      body {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
+  <!-- =========================
+       PAGE DE CONNEXION
+       ========================= -->
 
-    <div class="icon">📄</div>
+  <div class="login-container" id="loginContainer">
 
-    <h1>DOCUMENT PRIVÉ</h1>
+    <div class="login-box">
 
-    <p>
-      Entrez votre code d'accès pour ouvrir le document.
-    </p>
+      <div class="icon">📄</div>
 
-    <input
-      type="text"
-      id="accessCode"
-      placeholder="ABC-123456"
-      autocomplete="off"
-      autocapitalize="characters"
-      spellcheck="false"
-    >
+      <h1>DOCUMENT PRIVÉ</h1>
 
-    <button id="openButton" onclick="openDocument()">
-      OUVRIR LE DOCUMENT
-    </button>
+      <p class="description">
+        Entrez votre code d'accès pour ouvrir le document.
+      </p>
 
-    <div id="message"></div>
+      <input
+        type="text"
+        id="accessCode"
+        placeholder="ABC-123456"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+      >
+
+      <button id="openButton" onclick="openDocument()">
+        OUVRIR LE DOCUMENT
+      </button>
+
+      <div id="message"></div>
+
+    </div>
 
   </div>
+
+
+  <!-- =========================
+       LECTEUR DU DOCUMENT
+       ========================= -->
+
+  <div class="document-container" id="documentContainer">
+
+    <div class="document-header">
+
+      <div class="document-title">
+        📄 DOCUMENT PRIVÉ
+      </div>
+
+      <button
+        class="exit-button"
+        onclick="exitDocument()"
+      >
+        QUITTER
+      </button>
+
+    </div>
+
+    <div class="pdf-area" id="pdfArea">
+
+      <div class="loading" id="pdfLoading">
+        Chargement du document...
+      </div>
+
+      <iframe
+        id="pdfFrame"
+        title="Document privé"
+        style="display:none;"
+      ></iframe>
+
+    </div>
+
+  </div>
+
 
   <script>
 
     const VERIFY_URL =
       "https://lzefnxasbiutjahnsyse.supabase.co/functions/v1/verify-access";
 
+    const RELEASE_URL =
+      "https://lzefnxasbiutjahnsyse.supabase.co/functions/v1/release-access";
+
+    const DOCUMENT_URL =
+      "https://lzefnxasbiutjahnsyse.supabase.co/functions/v1/get-document";
+
+
+    let currentSessionId = null;
+
+
+    // ==========================================
+    // OUVERTURE DU DOCUMENT
+    // ==========================================
+
     async function openDocument() {
 
-      const input = document.getElementById("accessCode");
-      const button = document.getElementById("openButton");
-      const message = document.getElementById("message");
+      const input =
+        document.getElementById("accessCode");
 
-      const code = input.value.trim();
+      const button =
+        document.getElementById("openButton");
+
+      const message =
+        document.getElementById("message");
+
+      const code =
+        input.value.trim();
 
       if (!code) {
+
         message.textContent =
           "Veuillez entrer votre code d'accès.";
+
         message.className = "error";
+
         return;
       }
 
       button.disabled = true;
-      button.textContent = "VÉRIFICATION...";
+
+      button.textContent =
+        "VÉRIFICATION...";
+
       message.textContent = "";
+
 
       try {
 
-        const response = await fetch(VERIFY_URL, {
+        const response =
+          await fetch(VERIFY_URL, {
 
-          method: "POST",
+            method: "POST",
 
-          headers: {
-            "Content-Type": "application/json"
-          },
+            headers: {
+              "Content-Type": "application/json"
+            },
 
-          body: JSON.stringify({
-            code: code
-          })
+            body: JSON.stringify({
+              code: code
+            })
 
-        });
+          });
 
-        const result = await response.json();
 
-        if (result.success) {
+        const result =
+          await response.json();
 
-          /*
-           * Pour le moment, nous affichons seulement
-           * la confirmation.
-           *
-           * Le lecteur PDF sécurisé sera ajouté
-           * dans l'étape suivante.
-           */
 
-          message.textContent =
-            "Accès autorisé. Session créée.";
-
-          message.className = "success";
-
-          console.log(
-            "Session ID :",
-            result.session_id
-          );
-
-          button.textContent = "ACCÈS AUTORISÉ";
-
-        } else {
+        if (!result.success) {
 
           message.textContent =
             result.message || "Accès refusé.";
 
-          message.className = "error";
+          message.className =
+            "error";
 
           button.disabled = false;
-          button.textContent = "OUVRIR LE DOCUMENT";
+
+          button.textContent =
+            "OUVRIR LE DOCUMENT";
+
+          return;
         }
+
+
+        // Enregistrer la session
+        currentSessionId =
+          result.session_id;
+
+
+        message.textContent =
+          "Accès autorisé. Chargement du document...";
+
+        message.className =
+          "success";
+
+
+        // Charger le document
+        await loadDocument();
+
 
       } catch (error) {
 
@@ -206,12 +364,280 @@
         message.textContent =
           "Impossible de contacter le serveur.";
 
-        message.className = "error";
+        message.className =
+          "error";
 
         button.disabled = false;
-        button.textContent = "RÉESSAYER";
+
+        button.textContent =
+          "RÉESSAYER";
       }
+
     }
+
+
+    // ==========================================
+    // CHARGEMENT DU PDF
+    // ==========================================
+
+    async function loadDocument() {
+
+      const response =
+        await fetch(DOCUMENT_URL, {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            session_id: currentSessionId
+          })
+
+        });
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Impossible de récupérer le document."
+        );
+
+      }
+
+
+      const pdfBlob =
+        await response.blob();
+
+
+      const pdfUrl =
+        URL.createObjectURL(pdfBlob);
+
+
+      const frame =
+        document.getElementById("pdfFrame");
+
+      const loading =
+        document.getElementById("pdfLoading");
+
+
+      frame.src = pdfUrl;
+
+      loading.style.display =
+        "none";
+
+      frame.style.display =
+        "block";
+
+
+      document
+        .getElementById("loginContainer")
+        .style.display = "none";
+
+
+      document
+        .getElementById("documentContainer")
+        .style.display = "block";
+
+    }
+
+
+    // ==========================================
+    // QUITTER LE DOCUMENT
+    // ==========================================
+
+    async function exitDocument() {
+
+      if (!currentSessionId) {
+        return;
+      }
+
+
+      try {
+
+        await fetch(RELEASE_URL, {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            session_id: currentSessionId
+          })
+
+        });
+
+      } catch (error) {
+
+        console.error(
+          "Erreur de libération :",
+          error
+        );
+
+      }
+
+
+      currentSessionId = null;
+
+
+      const frame =
+        document.getElementById("pdfFrame");
+
+
+      if (frame.src) {
+
+        URL.revokeObjectURL(
+          frame.src
+        );
+
+        frame.src = "";
+
+      }
+
+
+      document
+        .getElementById("documentContainer")
+        .style.display = "none";
+
+
+      document
+        .getElementById("loginContainer")
+        .style.display = "flex";
+
+
+      document
+        .getElementById("accessCode")
+        .value = "";
+
+
+      document
+        .getElementById("message")
+        .textContent = "";
+
+
+      const button =
+        document.getElementById("openButton");
+
+      button.disabled = false;
+
+      button.textContent =
+        "OUVRIR LE DOCUMENT";
+
+    }
+
+
+    // ==========================================
+    // PROTECTION COPIER/COLLER
+    // ==========================================
+
+    document.addEventListener(
+      "copy",
+      function(event) {
+
+        event.preventDefault();
+
+      }
+    );
+
+
+    document.addEventListener(
+      "cut",
+      function(event) {
+
+        event.preventDefault();
+
+      }
+    );
+
+
+    document.addEventListener(
+      "contextmenu",
+      function(event) {
+
+        event.preventDefault();
+
+      }
+    );
+
+
+    // ==========================================
+    // PROTECTION DES RACCOURCIS
+    // ==========================================
+
+    document.addEventListener(
+      "keydown",
+      function(event) {
+
+        // Ctrl + P
+        if (
+          event.ctrlKey &&
+          event.key.toLowerCase() === "p"
+        ) {
+
+          event.preventDefault();
+
+        }
+
+
+        // Ctrl + S
+        if (
+          event.ctrlKey &&
+          event.key.toLowerCase() === "s"
+        ) {
+
+          event.preventDefault();
+
+        }
+
+
+        // Ctrl + U
+        if (
+          event.ctrlKey &&
+          event.key.toLowerCase() === "u"
+        ) {
+
+          event.preventDefault();
+
+        }
+
+      }
+    );
+
+
+    // ==========================================
+    // LIBÉRATION SI LA PAGE EST FERMÉE
+    // ==========================================
+
+    window.addEventListener(
+      "pagehide",
+      function() {
+
+        if (!currentSessionId) {
+          return;
+        }
+
+
+        const data =
+          JSON.stringify({
+            session_id: currentSessionId
+          });
+
+
+        navigator.sendBeacon(
+          RELEASE_URL,
+          new Blob(
+            [data],
+            {
+              type: "application/json"
+            }
+          )
+        );
+
+      }
+    );
 
   </script>
 
